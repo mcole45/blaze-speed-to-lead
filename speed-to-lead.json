@@ -1,0 +1,336 @@
+{
+  "name": "Blaze Speed-to-Lead",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "5bbc98a3-f70d-4a88-b332-e02af2e7c597",
+      "name": "Webhook",
+      "webhookId": "0d1970c0-410b-4333-b9e6-bbab9a8eef19"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "12IehvXQW-z9XkKwLpwsJ1uuNMAiBa1k0DMwYwoNALto",
+          "mode": "list",
+          "cachedResultName": "Blaze leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12IehvXQW-z9XkKwLpwsJ1uuNMAiBa1k0DMwYwoNALto/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12IehvXQW-z9XkKwLpwsJ1uuNMAiBa1k0DMwYwoNALto/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "name": "={{ $json.body.name }}",
+            "email": "={{ $json.body.email }}",
+            "phone": "={{ $json.body.phone }}",
+            "company": "={{ $json.body.company }}",
+            "doors": "={{ $json.body.doors }}",
+            "message": "={{ $json.body.message }}",
+            "received_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "doors",
+              "displayName": "doors",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "received_at",
+              "displayName": "received_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "fd408c08-2754-4f09-ac12-7404246052d1",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "nQtrz6dcpFwWw59Z",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a lead-qualification assistant for Blaze, an AI CFO and bookkeeping service for property-management companies.\n\nScore fit from 1 to 5 using these signals:\n\nSIZE (from doors): under 20 = weak; 20–99 = moderate; 100–499 = strong; 500+ = very strong. More doors means more owner statements, trust reconciliations, and rent ledgers each month.\n\nPAIN (from the message): bookkeeping, reconciliation, late rent / late fees / delinquency, cash flow, owner statements, deposits, 1099s, spreadsheets, \"mess\", \"behind\" = strong pain. Score higher when pain is explicit.\n\nFIT (from the message): mentions a rent portal or software (AppFolio, Buildium, Rent Manager, Propertyware, Yardi) = payment data already exists to plug into. HOA/association, commercial + residential, or multiple offices = multiple books to reconcile. \"Growing\", \"acquired\", \"expanding\" = finance ops lagging growth.\n\nDISQUALIFY: not a property manager or landlord = 1.\n\nThen write a first reply: 2–3 sentences, warm, that names the specific signal you picked up (their door count, their exact pain, their software), and ends with a question proposing a 15-minute call.\n\nReturn ONLY valid JSON, no markdown, in exactly this shape:\n{\"fit_score\": <integer 1-5>, \"reason\": \"<one sentence naming the strongest signal>\", \"reply\": \"<the message>\"}"
+            },
+            {
+              "content": "=Lead details:\nName: {{ $('Webhook').item.json.body.name }}\nCompany: {{ $('Webhook').item.json.body.company }}\nDoors: {{ $('Webhook').item.json.body.doors }}\nMessage: {{ $('Webhook').item.json.body.message }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_schema",
+              "name": "lead_score",
+              "schema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"fit_score\": {\n      \"type\": \"integer\",\n      \"description\": \"Fit score from 1 (poor) to 5 (excellent)\"\n    },\n    \"reason\": {\n      \"type\": \"string\",\n      \"description\": \"One sentence naming the strongest signal\"\n    },\n    \"reply\": {\n      \"type\": \"string\",\n      \"description\": \"2-3 sentence personalized first reply ending in a question\"\n    }\n  },\n  \"required\": [\"fit_score\", \"reason\", \"reply\"],\n  \"additionalProperties\": false\n}"
+            }
+          },
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "4b7d829b-be31-4c79-9b3a-480cf565cec3",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $json.output[0].content[0].text;\nconst parsed = typeof text === 'string' ? JSON.parse(text)\n             : typeof text.message === 'string' ? JSON.parse(text.message)\n             : text;\nreturn [{ json: {\n  fit_score: parsed.fit_score,\n  reason: parsed.reason,\n  reply: parsed.reply,\n  name: $('Webhook').item.json.body.name,\n  email: $('Webhook').item.json.body.email,\n  company: $('Webhook').item.json.body.company,\n  doors: $('Webhook').item.json.body.doors,\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        816,
+        0
+      ],
+      "id": "aeeac4a2-249f-419a-9489-dd105ab685d0",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "message",
+        "guildId": {
+          "__rl": true,
+          "value": "1561513687817265214",
+          "mode": "list",
+          "cachedResultName": "Cole23's server",
+          "cachedResultUrl": "https://discord.com/channels/1561513687817265214"
+        },
+        "sendTo": "user",
+        "userId": {
+          "__rl": true,
+          "value": "1062412116084142120",
+          "mode": "list",
+          "cachedResultName": "cole239017"
+        },
+        "content": "=🔔 New lead — fit {{ $json.fit_score }}/5\n**{{ $json.name }}** · {{ $json.company }} · {{ $json.doors }} doors · {{ $json.email }}\nWhy: {{ $json.reason }}\n\nDraft reply:\n{{ $json.reply }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "4dcfb3f9-b9b3-43ba-b149-2b1d625b6921",
+      "name": "Send a message",
+      "webhookId": "50c20ed8-8f91-4f93-91ec-e9a74fa3096f",
+      "credentials": {
+        "discordOAuth2Api": {
+          "id": "BrLxIMakZrP1t4Lc",
+          "name": "Discord account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "mwc234.app.n8n.cloud",
+            "user-agent": "curl/8.7.1",
+            "content-length": "215",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "2600:1700:9070:9b90:84a5:d51:da2e:8513",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "US",
+            "cf-ray": "a4cacc231ecac594-MIA",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "x-forwarded-for": "2600:1700:9070:9b90:84a5:d51:da2e:8513, 104.23.248.171",
+            "x-forwarded-host": "mwc234.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-29-669b78b6dd-rtcpl",
+            "x-is-trusted": "yes",
+            "x-real-ip": "2600:1700:9070:9b90:84a5:d51:da2e:8513"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "name": "Jordan Lee",
+            "email": "jordan@summitpm.com",
+            "phone": "305-555-0142",
+            "company": "Summit Property Management",
+            "doors": 180,
+            "message": "We manage 180 units and bookkeeping is a mess, late rent tracking especially."
+          },
+          "webhookUrl": "https://mwc234.app.n8n.cloud/webhook-test/lead",
+          "executionMode": "test"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "1137f1a5-c9c1-4b35-b9ed-17f483039e97",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e6ddcc9518b4ae45dc43a29dfc973c6ebe0318b1745c03e6004a42c58184266f"
+  },
+  "nodeGroups": [],
+  "id": "iFiMVdzJXymj4Wt7",
+  "tags": []
+}
